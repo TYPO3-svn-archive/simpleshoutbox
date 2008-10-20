@@ -23,7 +23,7 @@
 ***************************************************************/
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
-
+require_once(t3lib_extMgm::extPath('simpleshoutbox').'class.tx_simpleshoutbox_api.php');
 
 /**
  * Plugin 'Simple Shoutbox' for the 'simpleshoutbox' extension.
@@ -50,12 +50,22 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		$this->pi_USER_INT_obj=1;	// Configuring so caching is not expected. This value means that no cHash params are ever set. We do this, because it's a USER_INT object!
 
 		$this->ts = mktime();
-		$this->where = 'deleted=0';
+				
+		$temp_tsfe = get_object_vars($GLOBALS["TSFE"] -> fe_user);
+		$this->conf['user']['uid'] = $temp_tsfe['user']['uid'];
+		$this->conf['user']['username'] = $temp_tsfe['user']['username'];
 		
 		if (empty($this->conf['template'])) {
 			$this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
 		}		
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
+		
+		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.php"></script>';
+		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_conf'] = '	<script type="text/javascript">var conf = \''.serialize($this->conf).'\';</script>';
+		$GLOBALS['TSFE']->additionalHeaderData['prototype_js'] = '	<script src="typo3/contrib/prototype/prototype.js" type="text/javascript"></script>';
+		
+		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
+		$this->api->init($this->conf, $this->piVars);
 	}
 	
 	/**
@@ -70,85 +80,16 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	
 		//DEBUG-CONFIG
 		$GLOBALS['TYPO3_DB']->debugOutput = true;
-		t3lib_div::debug($this->conf,'conf');
-		
-		
+				
+		if ($this->piVars['submit']) {
+			$this->api->doSubmit();
+		}
 		$content = $this->generateOutput();
 	
 		return $this->pi_wrapInBaseClass($content);
 	}
 	
-	/**
-	 * Returns wrapped list of shoutbox messages
-	 *
-	 * @return	string	wrapped list of shoutbox messages
-	 */
-	function messages() {
-		$template = $this->cObj->getSubpart($this->templateCode, '###LIST###'); 
 		
-		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,crdate,userid,name,message',
-					'tx_simpleshoutbox_messages', $this->where, '', 'crdate DESC', '0,'.$this->conf['limit']);
-		
-		$content = $this->cObj->substituteSubpart($template, '###MESSAGE###', $this->messages_getMessages($rows));
-		return $content;
-	}
-	
-	/**
-	 * Returns list of shoutbox messages
-	 *
-	 * @param	array	$rows: database result rows (table: tx_simpleshoutbox_messages)
-	 * @return	string	shoutbox messages
-	 */
-	function messages_getMessages(&$rows) {
-		if (count($rows) == 0 ) {
-			$content = $this->pi_getLL('error_nomessages');		
-		} else {
-			$content = '';
-			$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGE###'); 
-			
-			foreach ($rows as $row) {
-				$markers = array(
-					'###USERNAME###' => $this->messages_getUsername($row['userid'],$row['name']),
-					'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
-					'###MESSAGETEXT###' => htmlspecialchars($row['message']),
-				);
-				
-				$content .= $this->cObj->substituteMarkerArray($template, $markers);
-			}
-		}
-		return $content;
-	}
-	
-	/**
-	 * Returns username w/o link to profile
-	 *
-	 * @param	integer	$uid: uid of user to be shown
-	 * @param	string	$name: name of user to be shown (if blank: username is read form database)
-	 * @return	username w/o link to profile
-	 */
-	function messages_getUsername($uid, $name='') {
-		$uid = intval($uid);
-		
-		if (!$name) {
-			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,username',
-					'fe_users', 'uid='.$uid);
-			if ($rows[0]['username']) {
-				$name = $rows[0]['username'];		
-			}
-		}
-		
-		if ($this->conf['userProfilePID']) {
-			$content = $this->pi_linkToPage(
-				$name,
-				intval($this->conf['userProfilePID']),'',
-				array($this->conf['userProfileParam'] => $uid)
-			);
-		} else {
-			$content = $name;
-		}
-		return $content;
-	}
-	
 	/**
 	 * Returns message form 
 	 *
@@ -169,12 +110,14 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		
 		$markers = array(
 			'###ACTION_LINK###' => $actionLink,
-			'###JS_LINK###' => '',
+			'###JS_LINK###' => 'txShoutBoxSendForm(); return false;',
 			'###L_MESSAGE###' => $this->pi_getLL('L_MESSAGE'),
 			'###L_SUBMIT###' => $this->pi_getLL('L_SUBMIT'),
 		);
 		
-		return $this->cObj->substituteMarkerArray($template, $markers);
+		$content = $this->cObj->substituteMarkerArray($template, $markers);
+		$content .= t3lib_div::wrapJS('txShoutBoxStartPeriodicalUpdate(20);');
+		return $content;
 	}
 	
 	/**
@@ -183,8 +126,12 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 * @return	string	content to be presented on website
 	 */
 	function generateOutput() {
-		$content = $this->messages();
-		$content .= "\n".$this->form();
+		if ($this->conf['user']['uid']) { 
+			$content = $this->api->messages();
+			$content .= "\n".$this->form();
+		} else {
+			$content = $this->pi_getLL('error_login');
+		}
 		return $content;
 	}
 }

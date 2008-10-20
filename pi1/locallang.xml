@@ -9,11 +9,13 @@
 			<label index="L_MESSAGE">Message</label>
 			<label index="L_SUBMIT">Send</label>
 			<label index="error_nomessages">no messages available</label>
+			<label index="error_login">you have to be logged in to use the shoutbox</label>
 		</languageKey>
 		<languageKey index="de" type="array">
 			<label index="L_MESSAGE">Nachricht</label>
 			<label index="L_SUBMIT">Senden</label>
 			<label index="error_nomessages">keine Nachrichten vorhanden</label>
+			<label index="error_login">Du musst eingeloggt sein um die Shoutbox zu benutzen.</label>
 		</languageKey>
 	</data>
 </T3locallang>
