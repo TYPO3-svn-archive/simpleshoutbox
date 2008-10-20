@@ -1,0 +1,6 @@
+plugin.tx_simpleshoutbox_pi1 {
+  limit = 50
+  dateformat = d.m &#150; h:i
+  userProfilePID = {$SPECIALSITES.PROFILE.PUBLIC}
+  userProfileParam = tx_feuser_pi1[uid]
+}
