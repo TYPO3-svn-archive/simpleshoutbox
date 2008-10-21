@@ -78,9 +78,6 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	function main($content,$conf)	{
 		$this->init($conf);		
 	
-		//DEBUG-CONFIG
-		$GLOBALS['TYPO3_DB']->debugOutput = true;
-				
 		if ($this->piVars['submit']) {
 			$this->api->doSubmit();
 		}
@@ -88,8 +85,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	
 		return $this->pi_wrapInBaseClass($content);
 	}
-	
-		
+			
 	/**
 	 * Returns message form 
 	 *
