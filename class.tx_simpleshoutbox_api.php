@@ -25,6 +25,7 @@
 require_once(PATH_tslib.'class.tslib_pibase.php');
 require_once(PATH_tslib.'class.tslib_content.php');
 require_once(PATH_t3lib.'class.t3lib_page.php');
+if (t3lib_extMgm::isLoaded('smilie')) require_once(t3lib_extMgm::extPath('smilie').'class.tx_smilie.php');
 
 /**
 	* [DESCRIPTION]
@@ -52,6 +53,8 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 
 		if (!$this->cObj) $this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
+
+		if (t3lib_extMgm::isLoaded('smilie')) $this->smilie = t3lib_div::makeInstance('tx_smilie');
 	}
 
 /**
@@ -131,18 +134,8 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 	}
 
 	function messages_replaceSmilies($message) {
-		$smiliesPath = t3lib_extMgm::siteRelPath($this->extKey).'res/smilies/';
-		$smilies = array(
-			':-)' => '0.gif',
-			';-)' => '2.gif',
-			':D' => '1.gif',
-			':-D' => '1.gif',
-			'8-)' => '7.gif',
-		);
-
-		foreach ($smilies as $smilie => $path) {
-			$content = '<img alt="'.$smilie.'" title="'.$smilie.'" src="'.$smiliesPath.$path.'" />';
-			$message = str_replace($smilie, $content, $message);
+		if ($this->smilie) {
+			$message = $this->smilie->replaceSmilies($message);
 		}
 		return $message;
 	}
