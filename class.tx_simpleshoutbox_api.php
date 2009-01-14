@@ -25,47 +25,69 @@
 require_once(PATH_tslib.'class.tslib_pibase.php');
 require_once(PATH_tslib.'class.tslib_content.php');
 require_once(PATH_t3lib.'class.t3lib_page.php');
+require_once(PATH_t3lib.'class.t3lib_tstemplate.php');
+require_once(PATH_t3lib.'class.t3lib_tsparser_ext.php');
 if (t3lib_extMgm::isLoaded('smilie')) require_once(t3lib_extMgm::extPath('smilie').'class.tx_smilie.php');
 
-/**
-	* [DESCRIPTION]
-	*
-	* $Id:
-	*
-	* @author		Peter Schuster <typo3@peschuster.de>
-	* @package		TYPO3
-	* @subpackage 	simpleshoutbox
-	*/
+	/**
+	 * API Class with all common functions for simpleshoutbox extension
+	 *
+	 * $Id$
+	 *
+	 * @author		Peter Schuster <typo3@peschuster.de>
+	 * @package		TYPO3
+	 * @subpackage 	simpleshoutbox
+	 */
 class tx_simpleshoutbox_api extends tslib_pibase {
 	var $prefixId		= 'tx_simpleshoutbox_api';		// Same as class name
 	var $scriptRelPath	= 'class.tx_simpleshoutbox_api.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleshoutbox';	// The extension key.
 
-	function init($conf='', $piVars='') {
-		$this->conf = $conf;
+	/**
+	 * Contains uid of latest message while last read
+	 *
+	 * @var integer
+	 */
+	var $lastUid = 0;
+
+	function init($conf=array(), $piVars='') {
 		$this->piVars = $piVars;
+
+		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
+
+		$GLOBALS['TSFE']->tmpl = t3lib_div::makeInstance('t3lib_tstemplate');
+		$GLOBALS['TSFE']->tmpl->init();
+
+		$rootLine = $GLOBALS['TSFE']->sys_page->getRootLine(1);
+		$TSObj = t3lib_div::makeInstance('t3lib_tsparser_ext');
+		$TSObj->tt_track = 0;
+		$TSObj->init();
+		$TSObj->runThroughTemplates($rootLine);
+		$TSObj->generateConfig();
+		$setup = $TSObj->setup;
+
+		$this->conf = (array)$setup['plugin.']['tx_simpleshoutbox_pi1.'];
+		$this->conf = array_merge($this->conf, $conf);
 
 		$this->where = 'deleted=0 '.$this->conf['where'];
 
-		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
-		$GLOBALS['TSFE']->tmpl = t3lib_div::makeInstance('t3lib_tstemplate');
-			$GLOBALS['TSFE']->tmpl->init();
-
 		if (!$this->cObj) $this->cObj = t3lib_div::makeInstance('tslib_cObj');
+
+		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
 
 		if (t3lib_extMgm::isLoaded('smilie')) $this->smilie = t3lib_div::makeInstance('tx_smilie');
 	}
 
-/**
-	 * Returns wrapped list of shoutbox messages
+	/**
+	 * Returns list of shoutbox messages
 	 *
-	 * @return	string	wrapped list of shoutbox messages
+	 * @param	boolean		$wrap: if true, messages are wrapped in shoutbox-container
+	 * @return	string	list of shoutbox messages
 	 */
 	function messages($wrap=true) {
 		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,crdate,userid,name,message',
 					'tx_simpleshoutbox_messages', $this->where, '', 'crdate DESC', '0,'.$this->conf['limit']);
-
 		$messages = $this->messages_getMessages($rows);
 
 		if ($wrap) {
@@ -96,7 +118,7 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 					'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
 					'###MESSAGETEXT###' => $this->messages_replaceSmilies(htmlspecialchars($row['message'])),
 				);
-
+				$this->lastUid = ($row['uid'] > $this->lastUid ? $row['uid'] : $this->lastUid);
 				$content .= $this->cObj->substituteMarkerArray($template, $markers);
 			}
 		}
@@ -133,6 +155,12 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Replaces smilies with smilie images
+	 *
+	 * @param	string		$message: shoutbox message
+	 * @return	string		HTML output
+	 */
 	function messages_replaceSmilies($message) {
 		if ($this->smilie) {
 			$message = $this->smilie->replaceSmilies($message);
@@ -140,14 +168,18 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		return $message;
 	}
 
+	/**
+	 * Processes submission of new message
+	 *
+	 */
 	function doSubmit() {
 		if ($this->piVars['submit'] && $this->doSubmit_validate()) {
 
 			// Create record
 			$record = array(
 				'pid' => intval($this->conf['pid']),
-				'userid' => $this->conf['user']['uid'],
-				'name' => $this->conf['user']['username'],
+				'userid' => $GLOBALS['TSFE']->fe_user->user['uid'],
+				'name' => $GLOBALS['TSFE']->fe_user->user['username'],
 				'message' => trim($this->piVars['message']),
 			);
 
@@ -175,13 +207,18 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Validates input data before submission
+	 *
+	 * @return boolean		result of validation
+	 */
 	function doSubmit_validate() {
 		// trim all
 		foreach ($this->piVars as $key => $value) {
 			$this->piVars[$key] = trim($value);
 		}
 
-		if (!$this->piVars['message']) {
+		if (!$this->piVars['message'] || intVal($GLOBALS['TSFE']->fe_user->user['uid']) < 1) {
 			return false;
 		}
 

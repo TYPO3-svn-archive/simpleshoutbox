@@ -51,17 +51,13 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 
 		$this->ts = mktime();
 
-		$temp_tsfe = get_object_vars($GLOBALS["TSFE"] -> fe_user);
-		$this->conf['user']['uid'] = $temp_tsfe['user']['uid'];
-		$this->conf['user']['username'] = $temp_tsfe['user']['username'];
+		$this->conf['user']['uid'] = $GLOBALS["TSFE"]->fe_user->user['uid'];
+		$this->conf['user']['username'] = $GLOBALS["TSFE"]->fe_user->user['username'];
 
-		if (empty($this->conf['template'])) {
-			$this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
-		}
+		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
 
-		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.js.php"></script>';
-		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_conf'] = '	<script type="text/javascript">var conf = \''.serialize($this->conf).'\';</script>';
+		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.js"></script>';
 		$GLOBALS['TSFE']->additionalHeaderData['prototype_js'] = '	<script src="typo3/contrib/prototype/prototype.js" type="text/javascript"></script>';
 
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
@@ -81,7 +77,9 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		if ($this->piVars['submit']) {
 			$this->api->doSubmit();
 		}
+
 		$content = $this->generateOutput();
+		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_conf'] = '	<script type="text/javascript">var txShoutBoxLastUid = \'' . $this->api->lastUid . '\';</script>';
 
 		return $this->pi_wrapInBaseClass($content);
 	}
@@ -122,7 +120,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 * @return	string	content to be presented on website
 	 */
 	function generateOutput() {
-		if ($this->conf['user']['uid']) {
+		if ($GLOBALS['TSFE']->loginUser) {
 			$content = $this->api->messages();
 			$content .= "\n".$this->form();
 		} else {

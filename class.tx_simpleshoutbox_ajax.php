@@ -24,45 +24,61 @@
 
 require_once(t3lib_extMgm::extPath('simpleshoutbox').'class.tx_simpleshoutbox_api.php');
 
- /**
-  * [DESCRIPTION]
-  *
-  * @author		Peter Schuster <typo3@peschuster.de>
-  * @package		TYPO3
-  * @subpackage 	simpleshoutbox
-  */
+/**
+	* [DESCRIPTION]
+	*
+	* @author		Peter Schuster <typo3@peschuster.de>
+	* @package		TYPO3
+	* @subpackage 	simpleshoutbox
+	*/
 class tx_simpleshoutbox_ajax {
 	var $prefixId		= 'tx_simpleshoutbox_ajax';		// Same as class name
 	var $scriptRelPath	= 'class.tx_simpleshoutbox_ajax.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleshoutbox';	// The extension key.
-	
-	function init() {
-		$feUserObj = tslib_eidtools::initFeUser();
-		$this->conf['user']['uid'] = $feUserObj->user['uid'];
-		$this->conf['user']['username'] = $feUserObj->user['username'];
 
-		$conf = is_array(unserialize(t3lib_div::_GP('conf'))) ? unserialize(t3lib_div::_GP('conf')) : array();
-		$this->conf = is_array($this->conf) ? array_merge($this->conf, $conf) : $conf;
-		
-		$this->conf['where'] = 'AND crdate > '.intval(t3lib_div::_GP('lastupdate'));
+	function init() {
+		$GLOBALS['TSFE']->fe_user = tslib_eidtools::initFeUser();
+		if ($GLOBALS['TSFE']->fe_user->user['uid'] > 0) $GLOBALS['TSFE']->loginUser = true;
+
+		$this->conf = array();
+
+		$this->conf['where'] = 'AND uid > '.intval(t3lib_div::_GP('lastupdate'));
 
 		$this->piVars['message'] = t3lib_div::_GP('message');
-		$this->piVars['submit'] = 1;  
-		
+		$this->piVars['submit'] = 1;
+
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
 		$this->api->init($this->conf, $this->piVars);
-		
+
 		tslib_eidtools::connectDB();
 	}
-	
+
+	function wrapResponse($messages, $messageId) {
+		$content = '<?xml version="1.0" ?><simpleshoutbox>';
+		$content .= '<lastuid>' . $messageId . '</lastuid>';
+		$content .= '<messages>' . ($messages ? '<![CDATA[' . $messages . ']]>' : '') . '</messages>';
+		$content .= '</simpleshoutbox>';
+		return $content;
+	}
+
 	function main() {
 		$this->init();
-		if (!t3lib_div::_GP('update')) { 
+		if (!t3lib_div::_GP('update')) {
 			$this->api->doSubmit();
 		}
-		return $this->api->messages(false);
+
+		$messages = $this->api->messages(false);
+		if ($this->api->lastUid < intval(t3lib_div::_GP('lastupdate'))) {
+			$lastUid = intval(t3lib_div::_GP('lastupdate'));
+		} else {
+			$lastUid = $this->api->lastUid;
+		}
+		$content = $this->wrapResponse($messages, $lastUid);
+
+		header('Content-Type:application/xml');
+		return $content;
 	}
-	
+
 }
 
 $SS = t3lib_div::makeInstance('tx_simpleshoutbox_ajax');
