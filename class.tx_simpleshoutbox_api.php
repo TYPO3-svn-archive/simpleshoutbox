@@ -144,10 +144,13 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		}
 
 		if ($this->conf['userProfilePID']) {
-			$content = $this->cObj->getTypoLink(
+			$content = $this->cObj->typoLink(
 				$name,
-				intval($this->conf['userProfilePID']),
-				array($this->conf['userProfileParam'] => $uid)
+				array(
+					'parameter' => intval($this->conf['userProfilePID']),
+					'useCacheHash' => true,
+					'additionalParams' => '&'.$this->conf['userProfileParam'].'='.$uid
+				)
 			);
 		} else {
 			$content = $name;
