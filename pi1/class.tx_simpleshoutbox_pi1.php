@@ -106,7 +106,6 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		);
 
 		$content = $this->cObj->substituteMarkerArray($template, $markers);
-		$content .= t3lib_div::wrapJS('txSimpleShoutbox.startPeriodicalUpdate(20);');
 		return $content;
 	}
 
@@ -117,9 +116,9 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 */
 	function generateOutput() {
 		if ($GLOBALS['TSFE']->loginUser) {
-			$content = t3lib_div::wrapJS('txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\';');
-			$content .= $this->api->messages();
+			$content = $this->api->messages();
 			$content .= "\n".$this->form();
+			$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
 		} else {
 			$content = $this->pi_getLL('error_login');
 		}
