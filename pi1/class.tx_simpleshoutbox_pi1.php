@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Peter Schuster <typo3@peschuster.de>
+*  (c) 2008-2009 Peter Schuster <typo3@peschuster.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -21,6 +21,13 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/**
+ * pi1/class.tx_simpleshoutbox_pi1.php
+ *
+ * $Id$
+ *
+ * @author Peter Schuster <typo3@peschuster.de>
+ */
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 require_once(t3lib_extMgm::extPath('simpleshoutbox').'class.tx_simpleshoutbox_api.php');
@@ -36,7 +43,6 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	var $prefixId      = 'tx_simpleshoutbox_pi1';		// Same as class name
 	var $scriptRelPath = 'pi1/class.tx_simpleshoutbox_pi1.php';	// Path to this script relative to the extension dir.
 	var $extKey        = 'simpleshoutbox';	// The extension key.
-	var $ts;				//TimeStamp
 
 	/**
 	 * Initiates configuration variables
@@ -47,18 +53,19 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		$this->conf=$conf;
 		$this->pi_setPiVarDefaults();
 		$this->pi_loadLL();
-		$this->pi_USER_INT_obj=1;	// Configuring so caching is not expected. This value means that no cHash params are ever set. We do this, because it's a USER_INT object!
 
-		$this->ts = mktime();
-
-		$this->conf['user']['uid'] = $GLOBALS["TSFE"]->fe_user->user['uid'];
-		$this->conf['user']['username'] = $GLOBALS["TSFE"]->fe_user->user['username'];
-
-		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
+		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
+		$this->templateCode = $this->cObj->substituteMarker($this->templateCode, '###SITE_REL_PATH###', t3lib_extMgm::siteRelPath($this->extKey));
 
-		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.js"></script>';
+		$key = 'tx_simpleshoutbox_' . md5($this->templateCode);
+		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
+			$headerParts = $this->cObj->getSubpart($this->templateCode, '###HEADER_ADDITIONS###');
+			if ($headerParts) $GLOBALS['TSFE']->additionalHeaderData[$key] = $headerParts;
+		}
+
 		$GLOBALS['TSFE']->additionalHeaderData['prototype_js'] = '	<script src="typo3/contrib/prototype/prototype.js" type="text/javascript"></script>';
+		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.js"></script>';
 
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
 		$this->api->init($this->conf, $this->piVars);
@@ -79,7 +86,6 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		}
 
 		$content = $this->generateOutput();
-		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_conf'] = '	<script type="text/javascript">var txShoutBoxLastUid = \'' . $this->api->lastUid . '\';</script>';
 
 		return $this->pi_wrapInBaseClass($content);
 	}
@@ -92,25 +98,15 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	function form() {
 		$template = $this->cObj->getSubpart($this->templateCode, '###FORM###');
 
-		$actionLink = $this->cObj->typoLink_URL(array(
-			'parameter' => $GLOBALS['TSFE']->id,
-			'addQueryString' => 1,
-			'addQueryString.' => array(
-				'exclude' => 'cHash,no_cache',
-			),
-			'additionalParams' => '&no_cache=1',
-			'useCacheHash' => false,
-		));
-
 		$markers = array(
-			'###ACTION_LINK###' => $actionLink,
-			'###JS_LINK###' => 'txShoutBoxSendForm(); return false;',
+			'###ACTION_LINK###' => t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'),
+			'###JS_LINK###' => 'txSimpleShoutbox.sendForm(); return false;',
 			'###L_MESSAGE###' => $this->pi_getLL('L_MESSAGE'),
 			'###L_SUBMIT###' => $this->pi_getLL('L_SUBMIT'),
 		);
 
 		$content = $this->cObj->substituteMarkerArray($template, $markers);
-		$content .= t3lib_div::wrapJS('txShoutBoxStartPeriodicalUpdate(20);');
+		$content .= t3lib_div::wrapJS('txSimpleShoutbox.startPeriodicalUpdate(20);');
 		return $content;
 	}
 
@@ -121,7 +117,8 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 */
 	function generateOutput() {
 		if ($GLOBALS['TSFE']->loginUser) {
-			$content = $this->api->messages();
+			$content = t3lib_div::wrapJS('txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\';');
+			$content .= $this->api->messages();
 			$content .= "\n".$this->form();
 		} else {
 			$content = $this->pi_getLL('error_login');

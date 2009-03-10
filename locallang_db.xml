@@ -7,16 +7,10 @@
 	<data type="array">
 		<languageKey index="default" type="array">
 			<label index="tx_simpleshoutbox_messages">Shoutbox Messages</label>
-			<label index="tx_simpleshoutbox_messages.userid">FE User</label>
-			<label index="tx_simpleshoutbox_messages.name">Name</label>
-			<label index="tx_simpleshoutbox_messages.message">Message</label>
 			<label index="tt_content.list_type_pi1">Simple Shoutbox</label>
 		</languageKey>
 		<languageKey index="de" type="array">
 			<label index="tx_simpleshoutbox_messages">Shoutbox-Nachrichten</label>
-			<label index="tx_simpleshoutbox_messages.userid">FE-Benutzer</label>
-			<label index="tx_simpleshoutbox_messages.name">Name</label>
-			<label index="tx_simpleshoutbox_messages.message">Nachricht</label>
 			<label index="tt_content.list_type_pi1">Einfache Shoutbox</label>
 		</languageKey>
 	</data>

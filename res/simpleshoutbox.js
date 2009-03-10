@@ -1,51 +1,49 @@
-var txShoutBoxUpdater;
-var txShoutBoxPeriodicalExecuter;
+var txSimpleShoutbox = {
+	_noUpdate: 0,
+	_url: 'index.php?eID=tx_simpleshoutbox_ajax',
+	_periodicalExecuter: null,
+	_listEl: document.getElementById('tx-simpleshoutbox-list'),
+	_messageEl: document.getElementById('tx-simpleshoutbox-pi1-form-message'),
+	lastUid: 0,
 
-function txShoutBoxSendForm() {
-	var url = 'index.php?eID=tx_simpleshoutbox_ajax';
+	_handleResponse: function(transport) {
+		var tempLastUid = transport.responseXML.getElementsByTagName("lastuid")[0];
+		this.lastUid = tempLastUid.firstChild.nodeValue;
 
-	var message = document.getElementById('tx-simpleshoutbox-pi1-form-message').value;
-	document.getElementById('tx-simpleshoutbox-pi1-form-message').value = '';
+		var content = transport.responseXML.getElementsByTagName("messages")[0];
+		var newIns = new Insertion.Top(this._listEl, content.firstChild.nodeValue);
+	},
 
-	var d = new Date();
+	update: function() {
+		if (this._noUpdate == 1) { return false; }
 
-	new Ajax.Request(url, {
-		method: 'post',
-		parameters: {message: message, lastupdate: txShoutBoxLastUid, nocachequery: d.getTime()},
-		onSuccess: function(transport) {
-			var el = document.getElementById('tx-simpleshoutbox-list');
+		var d = new Date();
 
-			txShoutBoxLastUid = transport.responseXML.getElementsByTagName("lastuid")[0];
-			txShoutBoxLastUid = txShoutBoxLastUid.firstChild.nodeValue;
+		var req = new Ajax.Request(this._url, {
+			method: 'post',
+			parameters: {lastupdate: this.lastUid, update: 1, nocachequery: d.getTime()},
+			onSuccess: this._handleResponse(transport)
+		});
+	},
 
-			var content = transport.responseXML.getElementsByTagName("messages")[0];
-			new Insertion.Top(el, content.firstChild.nodeValue);
-		}
-	});
-	txShoutBoxPeriodicalExecuter.stop();
-	txShoutBoxStartPeriodicalUpdate(10);
-}
+	startPeriodicalUpdate: function(period) {
+		this._periodicalExecuter = new PeriodicalExecuter(this.update,period);
+	},
 
-function txShoutBoxUpdate() {
-	var url = 'index.php?eID=tx_simpleshoutbox_ajax';
+	sendForm: function() {
+		var message = this._messageEl.value;
+		this._messageEl.value = '';
 
-	var d = new Date();
+		var d = new Date();
+		this._noUpdate = 1;
 
-	new Ajax.Request(url, {
-		method: 'post',
-		parameters: {lastupdate: txShoutBoxLastUid, update: 1, nocachequery: d.getTime()},
-		onSuccess: function(transport) {
-			var el = document.getElementById('tx-simpleshoutbox-list');
-
-			txShoutBoxLastUid = transport.responseXML.getElementsByTagName("lastuid")[0];
-			txShoutBoxLastUid = txShoutBoxLastUid.firstChild.nodeValue;
-
-			var content = transport.responseXML.getElementsByTagName("messages")[0];
-			new Insertion.Top(el, content.firstChild.nodeValue);
-		}
-	});
-}
-function txShoutBoxStartPeriodicalUpdate(period) {
-	txShoutBoxPeriodicalExecuter = new PeriodicalExecuter(txShoutBoxUpdate,period);
-}
-
+		var req = new Ajax.Request(this._url, {
+			method: 'post',
+			parameters: {message: message, lastupdate: this.lastUid, nocachequery: d.getTime()},
+			onSuccess: this._handleResponse(transport),
+			onComplete: function(transport) { this._noUpdate = 0; }
+		});
+		this._periodicalExecuter.stop();
+		this.startPeriodicalUpdate(10);
+	}
+};

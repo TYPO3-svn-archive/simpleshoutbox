@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Peter Schuster <typo3@peschuster.de>
+ *  (c) 2008-2009 Peter Schuster <typo3@peschuster.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -21,24 +21,31 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+/**
+ * class.tx_simpleshoutbox_api.php
+ *
+ * $Id$
+ *
+ * @author Peter Schuster <typo3@peschuster.de>
+ */
 
-require_once(PATH_tslib.'class.tslib_pibase.php');
 require_once(PATH_tslib.'class.tslib_content.php');
 require_once(PATH_t3lib.'class.t3lib_page.php');
 require_once(PATH_t3lib.'class.t3lib_tstemplate.php');
 require_once(PATH_t3lib.'class.t3lib_tsparser_ext.php');
-if (t3lib_extMgm::isLoaded('smilie')) require_once(t3lib_extMgm::extPath('smilie').'class.tx_smilie.php');
 
-	/**
-	 * API Class with all common functions for simpleshoutbox extension
-	 *
-	 * $Id$
-	 *
-	 * @author		Peter Schuster <typo3@peschuster.de>
-	 * @package		TYPO3
-	 * @subpackage 	simpleshoutbox
-	 */
-class tx_simpleshoutbox_api extends tslib_pibase {
+require_once t3lib_extMgm::extPath('lang', 'lang.php');
+
+/**
+ * API Class with all common functions for simpleshoutbox extension
+ *
+ * $Id$
+ *
+ * @author		Peter Schuster <typo3@peschuster.de>
+ * @package		TYPO3
+ * @subpackage 	simpleshoutbox
+ */
+class tx_simpleshoutbox_api {
 	var $prefixId		= 'tx_simpleshoutbox_api';		// Same as class name
 	var $scriptRelPath	= 'class.tx_simpleshoutbox_api.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleshoutbox';	// The extension key.
@@ -53,8 +60,30 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 	function init($conf=array(), $piVars='') {
 		$this->piVars = $piVars;
 
-		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
+		$this->conf = array_merge((array)$this->getTS(), $conf);
+		$this->where = 'deleted=0 '.$this->conf['where'];
 
+		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+
+		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
+		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
+
+		if (!$GLOBALS['LANG']) {
+			$GLOBALS['LANG'] = t3lib_div::makeInstance('language');
+			$GLOBALS['LANG']->init($GLOBALS['TSFE']->lang);
+		}
+	}
+
+	/**
+	 * Returns TypoScript configuration for plugin
+	 *
+	 * @return array	config typoscript for tx_simpleshoutbox_pi1
+	 */
+	function getTS() {
+		if (is_array($GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.']))
+			return $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.'];
+
+		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
 		$GLOBALS['TSFE']->tmpl = t3lib_div::makeInstance('t3lib_tstemplate');
 		$GLOBALS['TSFE']->tmpl->init();
 
@@ -64,19 +93,7 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		$TSObj->init();
 		$TSObj->runThroughTemplates($rootLine);
 		$TSObj->generateConfig();
-		$setup = $TSObj->setup;
-
-		$this->conf = (array)$setup['plugin.']['tx_simpleshoutbox_pi1.'];
-		$this->conf = array_merge($this->conf, $conf);
-
-		$this->where = 'deleted=0 '.$this->conf['where'];
-
-		if (!$this->cObj) $this->cObj = t3lib_div::makeInstance('tslib_cObj');
-
-		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/tmpl.tmpl';
-		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
-
-		if (t3lib_extMgm::isLoaded('smilie')) $this->smilie = t3lib_div::makeInstance('tx_smilie');
+		return $TSObj->setup['plugin.']['tx_simpleshoutbox_pi1.'];
 	}
 
 	/**
@@ -86,8 +103,8 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 	 * @return	string	list of shoutbox messages
 	 */
 	function messages($wrap=true) {
-		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,crdate,userid,name,message',
-					'tx_simpleshoutbox_messages', $this->where, '', 'crdate DESC', '0,'.$this->conf['limit']);
+		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleshoutbox_messages', $this->where, '',
+						'crdate DESC', '0,'.$this->conf['limit']);
 		$messages = $this->messages_getMessages($rows);
 
 		if ($wrap) {
@@ -106,8 +123,8 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 	 * @return	string	shoutbox messages
 	 */
 	function messages_getMessages(&$rows) {
-		if (count($rows) == 0 ) {
-			$content = $this->pi_getLL('error_nomessages');
+		if (count($rows) == 0) {
+			$content = $GLOBALS['LANG']->sL('LLL:EXT:simpleshoutbox/pi1/locallang.xml:error_nomessages',0);
 		} else {
 			$content = '';
 			$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGE###');
@@ -118,6 +135,15 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 					'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
 					'###MESSAGETEXT###' => $this->messages_replaceSmilies(htmlspecialchars($row['message'])),
 				);
+
+				// Call hook for custom markers
+				if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'])) {
+					foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'] as $userFunc) {
+						$params = array('pObj' => &$this, 'template' => $this->templateCode, 'markers' => $markers, 'row'=>&$row);
+						if (is_array($tempMarkers = t3lib_div::callUserFunction($userFunc, $params, $this))) $markers = $tempMarkers;
+					}
+				}
+
 				$this->lastUid = ($row['uid'] > $this->lastUid ? $row['uid'] : $this->lastUid);
 				$content .= $this->cObj->substituteMarkerArray($template, $markers);
 			}
@@ -136,76 +162,60 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 		$uid = intval($uid);
 
 		if (!$name) {
-			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,username',
-					'fe_users', 'uid='.$uid);
-			if ($rows[0]['username']) {
-				$name = $rows[0]['username'];
-			}
+			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,username','fe_users', 'uid='.$uid);
+			$name = $rows[0]['username'];
 		}
 
+		$content = $name;
 		if ($this->conf['userProfilePID']) {
-			$content = $this->cObj->typoLink(
-				$name,
-				array(
+			$typoLinkConf = array(
 					'parameter' => intval($this->conf['userProfilePID']),
 					'useCacheHash' => true,
 					'additionalParams' => '&'.$this->conf['userProfileParam'].'='.$uid
-				)
 			);
-		} else {
-			$content = $name;
+			$content = $this->cObj->typoLink($name, $typoLinkConf);
 		}
 		return $content;
 	}
 
 	/**
-	 * Replaces smilies with smilie images
-	 *
-	 * @param	string		$message: shoutbox message
-	 * @return	string		HTML output
-	 */
-	function messages_replaceSmilies($message) {
-		if ($this->smilie) {
-			$message = $this->smilie->replaceSmilies($message);
-		}
-		return $message;
-	}
-
-	/**
 	 * Processes submission of new message
 	 *
+	 * @return	void
 	 */
 	function doSubmit() {
-		if ($this->piVars['submit'] && $this->doSubmit_validate()) {
+		if ($this->doSubmit_validate()) {
 
 			// Create record
 			$record = array(
-				'pid' => intval($this->conf['pid']),
 				'userid' => $GLOBALS['TSFE']->fe_user->user['uid'],
 				'name' => $GLOBALS['TSFE']->fe_user->user['username'],
 				'message' => trim($this->piVars['message']),
 			);
 
+			// Call hook for custom data columns
+			if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraColumn'])) {
+				foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraColumn'] as $userFunc) {
+					$params = array('pObj' => &$this, 'record'=>$record);
+					if (is_array($tempRecord = t3lib_div::callUserFunction($userFunc, $params, $this))) $record = $tempRecord;
+				}
+			}
+
 			// Check for double post
 			$double_post_check = md5(implode(',', $record));
 			if ($this->conf['preventDuplicatePosts']) {
-				list($info) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('COUNT(*) AS t', 'tx_simpleshoutbox_messages',
-						'deleted=0 AND crdate>=' . (time() - 60*60) . ' AND doublecheck=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($double_post_check, 'tx_simpleshoutbox_messages'));
+				list($info) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('COUNT(*) AS count', 'tx_simpleshoutbox_messages',
+						'deleted=0 AND crdate>=' . (time() - 60*2) . ' AND doublecheck=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($double_post_check, 'tx_simpleshoutbox_messages'));
 			} else {
-				$info = array('t' => 0);
+				$info = array('count' => 0);
 			}
 
-			if ($info['t'] > 0) {
-				//
-			} else {
-				// Add rest of the fields
+			if ($info['count'] = 0) {
 				$record['crdate'] = $record['tstamp'] = time();
 				$record['doublecheck'] = $double_post_check;
 
-				// Insert comment record
 				$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleshoutbox_messages', $record);
 				$newUid = $GLOBALS['TYPO3_DB']->sql_insert_id();
-
 			}
 		}
 	}
@@ -216,15 +226,8 @@ class tx_simpleshoutbox_api extends tslib_pibase {
 	 * @return boolean		result of validation
 	 */
 	function doSubmit_validate() {
-		// trim all
-		foreach ($this->piVars as $key => $value) {
-			$this->piVars[$key] = trim($value);
-		}
-
-		if (!$this->piVars['message'] || intVal($GLOBALS['TSFE']->fe_user->user['uid']) < 1) {
-			return false;
-		}
-
+		foreach ($this->piVars as $key => $value) $this->piVars[$key] = trim($value);
+		if (!$this->piVars['message'] || intVal($GLOBALS['TSFE']->fe_user->user['uid']) < 1) return false;
 		return true;
 	}
 

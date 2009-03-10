@@ -3,7 +3,6 @@
 #
 CREATE TABLE tx_simpleshoutbox_messages (
 	uid int(11) NOT NULL auto_increment,
-	pid int(11) NOT NULL default '0',
 	tstamp int(11) NOT NULL default '0',
 	crdate int(11) NOT NULL default '0',
 	deleted tinyint(4) NOT NULL default '0',
@@ -12,6 +11,5 @@ CREATE TABLE tx_simpleshoutbox_messages (
 	message tinytext,
 	doublecheck tinytext,
 
-	PRIMARY KEY  (uid),
-	KEY parent (pid)
+	PRIMARY KEY  (uid)
 );

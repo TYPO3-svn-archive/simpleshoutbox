@@ -1,0 +1,12 @@
+.tx-simpleshoutbox-pi1 { width: 293px; }
+.tx-simpleshoutbox-message { border: 1px solid #666666; margin-bottom: 5px; background: #FFF5DF ; }
+.tx-simpleshoutbox-message-header { background-color: #EEEEEE; height:14px; overflow:hidden; background: #FFD67F; }
+.tx-simpleshoutbox-message-header span { display: block; }
+.tx-simpleshoutbox-message-header-name { float: left; padding-left: 3px; }
+.tx-simpleshoutbox-message-header-date { float: right; clear: right; padding-right: 3px; font-size: 0.8em; }
+.tx-simpleshoutbox-message-content { line-height:1.4em; padding:1px 3px; }
+.tx-simpleshoutbox-message-content img { float: none !important; border: 0 none !important; padding: 0 !important; margin: 0 !important; }
+.tx-simpleshoutbox-form { padding:4px; }
+.tx-simpleshoutbox-form-text { background-color:#FFF5DF; border:1px solid #444444; width:283px; }
+.tx-simpleshoutbox-form label { display: block; float: left; clear: left; }
+.tx-simpleshoutbox-list { height: 350px; overflow:auto; padding: 2px; border: 1px dashed #333333; }
