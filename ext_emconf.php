@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext: "simpleshoutbox"
 #
-# Auto generated 12-03-2009 00:57
+# Auto generated 12-03-2009 01:01
 #
 # Manual updates:
 # Only the data in the array - anything else is removed by next write.
@@ -29,7 +29,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => '',
 	'author_company' => '',
-	'version' => '0.0.0',
+	'version' => '0.1.0',
 	'constraints' => array(
 		'depends' => array(
 			'cms' => '',
