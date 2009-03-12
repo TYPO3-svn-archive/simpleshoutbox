@@ -68,6 +68,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		$GLOBALS['TSFE']->additionalHeaderData['tx_simpleshoutbox_js'] = '	<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath($this->extKey).'res/simpleshoutbox.js"></script>';
 
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
+		$this->conf['pageId'] = $GLOBALS['TSFE']->id;
 		$this->api->init($this->conf, $this->piVars);
 	}
 
@@ -118,7 +119,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		if ($GLOBALS['TSFE']->loginUser) {
 			$content = $this->api->messages();
 			$content .= "\n".$this->form();
-			$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
+			$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.pageId = \'' . $GLOBALS['TSFE']->id . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
 		} else {
 			$content = $this->pi_getLL('error_login');
 		}

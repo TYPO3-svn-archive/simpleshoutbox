@@ -57,13 +57,23 @@ class tx_simpleshoutbox_api {
 	 */
 	var $lastUid = 0;
 
+	/**
+	 * tslib_cObj
+	 *
+	 * @var tslib_cObj
+	 */
+	var $cObj;
+
 	function init($conf=array(), $piVars='') {
 		$this->piVars = $piVars;
 
-		$this->conf = array_merge((array)$this->getTS(), $conf);
+		$this->conf = array_merge((array)$this->getTS(intVal($conf['pageId'])), $conf);
 		$this->where = 'deleted=0 '.$this->conf['where'];
+		if (intVal($this->conf['limit']) < 1) $this->conf['limit'] = 50;
+		if (!$this->conf['dateformat']) $this->conf['dateformat'] = 'd.m. &#8211; H:i';
 
 		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->cObj->start(array());
 
 		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
@@ -79,7 +89,7 @@ class tx_simpleshoutbox_api {
 	 *
 	 * @return array	config typoscript for tx_simpleshoutbox_pi1
 	 */
-	function getTS() {
+	function getTS($pageId) {
 		if (is_array($GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.']))
 			return $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.'];
 
@@ -87,7 +97,7 @@ class tx_simpleshoutbox_api {
 		$GLOBALS['TSFE']->tmpl = t3lib_div::makeInstance('t3lib_tstemplate');
 		$GLOBALS['TSFE']->tmpl->init();
 
-		$rootLine = $GLOBALS['TSFE']->sys_page->getRootLine(1);
+		$rootLine = $GLOBALS['TSFE']->sys_page->getRootLine($pageId);
 		$TSObj = t3lib_div::makeInstance('t3lib_tsparser_ext');
 		$TSObj->tt_track = 0;
 		$TSObj->init();
@@ -155,7 +165,7 @@ class tx_simpleshoutbox_api {
 	 * Returns username w/o link to profile
 	 *
 	 * @param	integer	$uid: uid of user to be shown
-	 * @param	string	$name: name of user to be shown (if blank: username is read form database)
+	 * @param	string	$name: name of user to be shown (if blank: username is read from database)
 	 * @return	username w/o link to profile
 	 */
 	function messages_getUsername($uid, $name='') {

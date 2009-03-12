@@ -72,6 +72,8 @@ class tx_simpleshoutbox_ajax {
 		$this->piVars['message'] = t3lib_div::_GP('message');
 
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
+		$this->conf['pageId'] = intVal(t3lib_div::_POST('id'));
+		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
 		$this->api->init($this->conf, $this->piVars);
 	}
 

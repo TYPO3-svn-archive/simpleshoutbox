@@ -1,11 +1,11 @@
-var txSimpleShoutbox = Class.create();
-Object.extend(txSimpleShoutbox, {
+var txSimpleShoutbox = {
 	noUpdate: 0,
 	url: 'index.php?eID=tx_simpleshoutbox_ajax',
 	periodicalExecuter: null,
 	listEl: null,
 	messageEl: null,
 	lastUid: 0,
+	pageId: 1,
 
 	init: function() {
 		this.listEl = document.getElementById('tx-simpleshoutbox-list');
@@ -29,7 +29,7 @@ Object.extend(txSimpleShoutbox, {
 
 		var req = new Ajax.Request(txSimpleShoutbox.url, {
 			method: 'post',
-			parameters: {lastupdate: txSimpleShoutbox.lastUid, update: 1, nocachequery: d.getTime()},
+			parameters: {lastupdate: txSimpleShoutbox.lastUid, id: txSimpleShoutbox.pageId, update: 1, nocachequery: d.getTime()},
 			onSuccess: function(transport) { txSimpleShoutbox.handleResponse(transport); }
 		});
 	},
@@ -47,7 +47,7 @@ Object.extend(txSimpleShoutbox, {
 
 		var req = new Ajax.Request(this.url, {
 			method: 'post',
-			parameters: {message: message, lastupdate: this.lastUid, nocachequery: d.getTime()},
+			parameters: {message: message, lastupdate: this.lastUid, id: this.pageId, nocachequery: d.getTime()},
 			onSuccess: function(transport) {
 				txSimpleShoutbox.handleResponse(transport);
 				txSimpleShoutbox.periodicalExecuter.stop();
@@ -56,4 +56,4 @@ Object.extend(txSimpleShoutbox, {
 			}
 		});
 	}
-});
+};
