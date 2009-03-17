@@ -140,23 +140,47 @@ class tx_simpleshoutbox_api {
 			$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGE###');
 
 			foreach ($rows as $row) {
-				$markers = array(
-					'###USERNAME###' => $this->messages_getUsername($row['userid'],$row['name']),
-					'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
-					'###MESSAGETEXT###' => htmlspecialchars($row['message']),
-				);
+				$hash = md5(serialize($row));
+				list($cache) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'cache_hash', 'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash'));
+				if (!empty($cache['content'])) {
+					$itemContent = $cache['content'];
+				} else {
+					$markers = array(
+						'###USERNAME###' => $this->messages_getUsername($row['userid'],$row['name']),
+						'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
+						'###MESSAGETEXT###' => htmlspecialchars($row['message']),
+					);
 
-				// Call hook for custom markers
-				if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'])) {
-					foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'] as $userFunc) {
-						$params = array('pObj' => &$this, 'template' => $this->templateCode, 'markers' => $markers, 'row'=>&$row);
-						if (is_array($tempMarkers = t3lib_div::callUserFunction($userFunc, $params, $this))) $markers = $tempMarkers;
+					// Call hook for custom markers
+					if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'])) {
+						foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'] as $userFunc) {
+							$params = array('pObj' => &$this, 'template' => $this->templateCode, 'markers' => $markers, 'row'=>&$row);
+							if (is_array($tempMarkers = t3lib_div::callUserFunction($userFunc, $params, $this))) $markers = $tempMarkers;
+						}
 					}
+
+					$itemContent = $this->cObj->substituteMarkerArray($template, $markers);
+
+					$GLOBALS['TYPO3_DB']->exec_INSERTquery(
+						'cache_hash',
+						array(
+							'hash' => $hash,
+							'content' => $itemContent,
+							'tstamp' => time(),
+							'ident' => 'tx_simpleshoutbox',
+						)
+					);
+
 				}
 
+				$content .= $itemContent;
 				$this->lastUid = ($row['uid'] > $this->lastUid ? $row['uid'] : $this->lastUid);
-				$content .= $this->cObj->substituteMarkerArray($template, $markers);
+
 			}
+
+			$tempRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('crdate', 'tx_simpleshoutbox_messages', 'uid>0', '',
+						'crdate DESC', '0,'.$this->conf['limit']);
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'ident=\'tx_simpleshoutbox\' AND tstamp<' . $tempRows[count($tempRows)-1]['crdate']);
 		}
 		return $content;
 	}

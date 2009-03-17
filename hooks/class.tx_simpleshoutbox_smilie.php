@@ -29,6 +29,8 @@
  * @author Peter Schuster <typo3@peschuster.de>
  */
 
+if (t3lib_extMgm::isLoaded('smilie')) require_once(t3lib_extMgm::extPath('smilie', 'class.tx_smilie.php'));
+
 /**
  * Class with function for replacing smilie strings
  * in message body with img-tags
@@ -40,6 +42,13 @@
 class tx_simpleshoutbox_smilie {
 
 	/**
+	 * instance of tx_smilie
+	 *
+	 * @var tx_smilie
+	 */
+	public $smilie = null;
+
+	/**
 	 * Calls tx_smilie->replaceSmilies with $params['markers']['###MESSAGETEXT###']
 	 * as paramter and returns result in new markers array
 	 *
@@ -49,9 +58,8 @@ class tx_simpleshoutbox_smilie {
 	 */
 	function replaceSmilies(&$params, &$pObj) {
 		if (t3lib_extMgm::isLoaded('smilie')) {
-			require_once(t3lib_extMgm::extPath('smilie', 'class.tx_smilie.php'));
-			$smilie = t3lib_div::makeInstance('tx_smilie');
-			$params['markers']['###MESSAGETEXT###'] = $smilie->replaceSmilies($params['markers']['###MESSAGETEXT###']);
+			if ($this->smilie === null) $this->smilie = t3lib_div::makeInstance('tx_smilie');
+			$params['markers']['###MESSAGETEXT###'] = $this->smilie->replaceSmilies($params['markers']['###MESSAGETEXT###']);
 			return $params['markers'];
 		}
 		return false;
