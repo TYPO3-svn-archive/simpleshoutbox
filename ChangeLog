@@ -1,3 +1,9 @@
+2009-03-17 Peter Schuster  <typo3@peschuster.de>
+
+	* plugin makes use of cache_hash now
+	* tx_smilie hook class refactored -> tx_smilie->__constuct is called only once now
+	* released version 0.2.0
+
 2009-03-12 Peter Schuster  <typo3@peschuster.de>
 
 	* Initial release
