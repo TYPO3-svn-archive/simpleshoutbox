@@ -8,9 +8,11 @@ $TCA['tx_simpleshoutbox_messages'] = array (
 		'tstamp'    => 'tstamp',
 		'crdate'    => 'crdate',
 		'default_sortby' => 'ORDER BY crdate DESC',
+		'delete' => 'deleted',
 		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_simpleshoutbox_messages.gif',
 		'hideTable'	=> 1,
 	),
+	'columns'	=> array(),
 );
 
 
