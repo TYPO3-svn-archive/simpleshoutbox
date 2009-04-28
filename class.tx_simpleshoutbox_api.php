@@ -263,7 +263,7 @@ class tx_simpleshoutbox_api {
 	 */
 	function doSubmit_validate() {
 		foreach ($this->piVars as $key => $value) $this->piVars[$key] = trim($value);
-		if (!$this->piVars['message'] || intVal($GLOBALS['TSFE']->fe_user->user['uid']) < 1) return false;
+		if (!$this->piVars['message'] || $GLOBALS['TSFE']->loginUser !== true) return false;
 		return true;
 	}
 

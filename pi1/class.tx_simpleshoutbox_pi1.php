@@ -116,13 +116,13 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 * @return	string	content to be presented on website
 	 */
 	function generateOutput() {
+		$content = $this->api->messages();
 		if ($GLOBALS['TSFE']->loginUser) {
-			$content = $this->api->messages();
 			$content .= "\n".$this->form();
-			$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.pageId = \'' . $GLOBALS['TSFE']->id . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
 		} else {
-			$content = $this->pi_getLL('error_login');
+			$content .= $this->pi_getLL('error_login');
 		}
+		$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.pageId = \'' . $GLOBALS['TSFE']->id . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
 		return $content;
 	}
 }

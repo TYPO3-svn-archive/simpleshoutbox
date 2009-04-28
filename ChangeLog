@@ -1,3 +1,9 @@
+2009-04-28  Peter Schuster   <typo3@peschuster.de>
+
+	* eyeryone can see the message list now
+	* sending messages is still limited to logged in users
+	* released version 0.2.1
+
 2009-03-17 Peter Schuster  <typo3@peschuster.de>
 
 	* plugin makes use of cache_hash now
