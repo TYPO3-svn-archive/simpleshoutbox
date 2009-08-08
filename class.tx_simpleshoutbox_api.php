@@ -71,6 +71,7 @@ class tx_simpleshoutbox_api {
 		$this->where = 'deleted=0 '.$this->conf['where'];
 		if (intVal($this->conf['limit']) < 1) $this->conf['limit'] = 50;
 		if (!$this->conf['dateformat']) $this->conf['dateformat'] = 'd.m. &#8211; H:i';
+		if (!$this->conf['displayColumn']) $this->conf['displayColumn'] = 'username';
 
 		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		$this->cObj->start(array());
@@ -196,8 +197,8 @@ class tx_simpleshoutbox_api {
 		$uid = intval($uid);
 
 		if (!$name) {
-			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,username','fe_users', 'uid='.$uid);
-			$name = $rows[0]['username'];
+			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,'.$this->conf['displayColumn'],'fe_users', 'uid='.$uid);
+			$name = $rows[0][$this->conf['displayColumn']];
 		}
 
 		$content = $name;
@@ -223,7 +224,7 @@ class tx_simpleshoutbox_api {
 			// Create record
 			$record = array(
 				'userid' => $GLOBALS['TSFE']->fe_user->user['uid'],
-				'name' => $GLOBALS['TSFE']->fe_user->user['username'],
+				'name' => $GLOBALS['TSFE']->fe_user->user[$this->conf['displayColumn']],
 				'message' => trim($this->piVars['message']),
 			);
 
