@@ -249,8 +249,6 @@ class tx_simpleshoutbox_api {
 				$record['crdate'] = $record['tstamp'] = time();
 				$record['doublecheck'] = $double_post_check;
 
-
-				$GLOBALS['TYPO3_DB']->debugOutput = true;
 				$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleshoutbox_messages', $record);
 				$newUid = $GLOBALS['TYPO3_DB']->sql_insert_id();
 			}

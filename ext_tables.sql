@@ -6,7 +6,7 @@ CREATE TABLE tx_simpleshoutbox_messages (
 	tstamp int(11) NOT NULL default '0',
 	crdate int(11) NOT NULL default '0',
 	deleted tinyint(4) NOT NULL default '0',
-	userid tinyint(4) default '0',
+	userid int(11) default '0',
 	`name` tinytext,
 	message tinytext,
 	doublecheck tinytext,
