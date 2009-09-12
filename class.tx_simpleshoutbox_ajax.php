@@ -65,15 +65,16 @@ class tx_simpleshoutbox_ajax {
 	protected function init() {
 		tslib_eidtools::connectDB();
 		$GLOBALS['TSFE']->fe_user = tslib_eidtools::initFeUser();
-		if ($GLOBALS['TSFE']->fe_user->user['uid'] > 0) $GLOBALS['TSFE']->loginUser = true;
+		$GLOBALS['TSFE']->loginUser = ($GLOBALS['TSFE']->fe_user->user['uid'] > 0);
 
-		$this->conf['where'] = 'AND uid > '.intval(t3lib_div::_GP('lastupdate'));
+		$this->conf['where'] = 'AND uid > ' . intval(t3lib_div::_GP('lastupdate'));
 
 		$this->piVars['message'] = t3lib_div::_GP('message');
 
-		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
 		$this->conf['pageId'] = intVal(t3lib_div::_POST('id'));
 		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
+
+		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
 		$this->api->init($this->conf, $this->piVars);
 	}
 

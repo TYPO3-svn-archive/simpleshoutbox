@@ -69,7 +69,9 @@ class tx_simpleshoutbox_api {
 
 		$this->conf = array_merge((array)$this->getTS(intVal($conf['pageId'])), $conf);
 		$this->where = 'deleted=0 '.$this->conf['where'];
-		if (intVal($this->conf['limit']) < 1) $this->conf['limit'] = 50;
+
+		$this->conf['limit'] = intVal($this->conf['limit']);
+		if ($this->conf['limit'] < 1) $this->conf['limit'] = 50;
 		if (!$this->conf['dateformat']) $this->conf['dateformat'] = 'd.m. &#8211; H:i';
 		if (!$this->conf['displayColumn']) $this->conf['displayColumn'] = 'username';
 
