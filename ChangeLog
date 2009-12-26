@@ -3,6 +3,11 @@
 	* added caching of full ajax requests
 	* updated documentation
 
+2009-09-12  Peter Schuster   <typo3@peschuster.de>
+
+	* changed database colum 'userid' to int(11) - fixes bug #4605
+	* small rafactoring chages in api and ajax class
+
 2009-08-08  Peter Schuster   <typo3@peschuster.de>
 
 	* added span with css class around username in default template
