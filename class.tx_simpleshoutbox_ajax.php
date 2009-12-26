@@ -55,7 +55,7 @@ class tx_simpleshoutbox_ajax {
 	 *
 	 * @var tx_simpleshoutbox_api
 	 */
-	protected $api;
+	protected $api = NULL;
 
 	/**
 	 * Initiates required apis
@@ -64,8 +64,6 @@ class tx_simpleshoutbox_ajax {
 	 */
 	protected function init() {
 		tslib_eidtools::connectDB();
-		$GLOBALS['TSFE']->fe_user = tslib_eidtools::initFeUser();
-		$GLOBALS['TSFE']->loginUser = ($GLOBALS['TSFE']->fe_user->user['uid'] > 0);
 
 		$this->conf['where'] = 'AND uid > ' . intval(t3lib_div::_GP('lastupdate'));
 
@@ -73,6 +71,11 @@ class tx_simpleshoutbox_ajax {
 
 		$this->conf['pageId'] = intVal(t3lib_div::_POST('id'));
 		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
+	}
+
+	protected function initApi() {
+		$GLOBALS['TSFE']->fe_user = tslib_eidtools::initFeUser();
+		$GLOBALS['TSFE']->loginUser = ($GLOBALS['TSFE']->fe_user->user['uid'] > 0);
 
 		$this->api = t3lib_div::makeInstance('tx_simpleshoutbox_api');
 		$this->api->init($this->conf, $this->piVars);
@@ -100,15 +103,41 @@ class tx_simpleshoutbox_ajax {
 	 */
 	public function main() {
 		$this->init();
+
 		if (!t3lib_div::_GP('update')) {
+			$this->initApi();
 			$this->api->doSubmit();
 		}
 
-		$messages = $this->api->messages(false);
-		$lastUid = $this->api->lastUid;
-		if ($lastUid < intval(t3lib_div::_GP('lastupdate'))) $lastUid = intval(t3lib_div::_GP('lastupdate'));
+		$hash = md5(serialize($this->conf));
+		list($cache) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+			'*',
+			'cache_hash',
+			'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash')
+		);
 
-		$content = $this->xmlWrap($messages, $lastUid);
+		if (!empty($cache['content'])) {
+			$content = $cache['content'];
+
+		} else {
+			if ($this->api === NULL) $this->initApi();
+
+			$messages = $this->api->messages(false);
+			$lastUid = $this->api->lastUid;
+			if ($lastUid < intval(t3lib_div::_GP('lastupdate'))) $lastUid = intval(t3lib_div::_GP('lastupdate'));
+
+			$content = $this->xmlWrap($messages, $lastUid);
+
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery(
+				'cache_hash',
+				array(
+					'hash' => $hash,
+					'content' => $content,
+					'tstamp' => time(),
+					'ident' => 'tx_simpleshoutbox_ajax',
+				)
+			);
+		}
 
 		header('Content-Type:application/xml');
 		return $content;

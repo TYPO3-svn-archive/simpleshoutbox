@@ -122,7 +122,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 		} else {
 			$content .= $this->pi_getLL('error_login');
 		}
-		$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.pageId = \'' . $GLOBALS['TSFE']->id . '\'; txSimpleShoutbox.startPeriodicalUpdate(20);');
+		$content .= t3lib_div::wrapJS('txSimpleShoutbox.init(); txSimpleShoutbox.lastUid = \'' . $this->api->lastUid . '\'; txSimpleShoutbox.pageId = \'' . $GLOBALS['TSFE']->id . '\'; txSimpleShoutbox.startPeriodicalUpdate(30);');
 		return $content;
 	}
 }

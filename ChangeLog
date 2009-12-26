@@ -1,3 +1,13 @@
+2009-12-26  Peter Schuster   <typo3@peschuster.de>
+
+	* added caching of full ajax requests
+	* updated documentation
+
+2009-08-08  Peter Schuster   <typo3@peschuster.de>
+
+	* added span with css class around username in default template
+	* displayed field of user table now configurable by typoscript
+
 2009-04-28  Peter Schuster   <typo3@peschuster.de>
 
 	* eyeryone can see the message list now
@@ -6,8 +16,8 @@
 
 2009-03-17 Peter Schuster  <typo3@peschuster.de>
 
-	* plugin makes use of cache_hash now
-	* tx_smilie hook class refactored -> tx_smilie->__constuct is called only once now
+	* plugin makes use of cache_hash
+	* tx_smilie hook class refactored -> tx_smilie->__constuct is called only once
 	* released version 0.2.0
 
 2009-03-12 Peter Schuster  <typo3@peschuster.de>

@@ -253,6 +253,8 @@ class tx_simpleshoutbox_api {
 
 				$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleshoutbox_messages', $record);
 				$newUid = $GLOBALS['TYPO3_DB']->sql_insert_id();
+
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'ident=\'tx_simpleshoutbox_ajax\'');
 			}
 		}
 	}

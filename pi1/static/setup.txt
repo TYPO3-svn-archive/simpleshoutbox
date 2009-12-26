@@ -1,7 +1,8 @@
 plugin.tx_simpleshoutbox_pi1 {
-	limit = 50
-	dateformat = d.m. &#8211; H:i
-	userProfilePID = 0
-	userProfileParam = tx_feuser_pi1[showUid]
-	preventDuplicatePosts = 0
+  limit = 50
+  dateformat = d.m. &#8211; H:i
+  userProfilePID = 0
+  userProfileParam = tx_feuser_pi1[showUid]
+  preventDuplicatePosts = 0
+  displayColumn = username
 }
