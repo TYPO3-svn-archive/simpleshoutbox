@@ -29,17 +29,8 @@
  * @author Peter Schuster <typo3@peschuster.de>
  */
 
-require_once(PATH_tslib.'class.tslib_content.php');
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_tstemplate.php');
-require_once(PATH_t3lib.'class.t3lib_tsparser_ext.php');
-
-require_once t3lib_extMgm::extPath('lang', 'lang.php');
-
 /**
  * API Class with all common functions for simpleshoutbox extension
- *
- * $Id$
  *
  * @author		Peter Schuster <typo3@peschuster.de>
  * @package		TYPO3

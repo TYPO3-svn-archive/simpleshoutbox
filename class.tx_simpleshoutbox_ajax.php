@@ -29,8 +29,6 @@
  * @author Peter Schuster <typo3@peschuster.de>
  */
 
-require_once(t3lib_extMgm::extPath('simpleshoutbox').'class.tx_simpleshoutbox_api.php');
-
 /**
  * Class handling AJAX-Requests of tx_simpleshoutbox
  *
@@ -71,6 +69,7 @@ class tx_simpleshoutbox_ajax {
 
 		$this->conf['pageId'] = intVal(t3lib_div::_POST('id'));
 		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
+		if ($GLOBALS['TSFE']->id < 1) $GLOBALS['TSFE']->id = $this->conf['pageId'];
 	}
 
 	protected function initApi() {

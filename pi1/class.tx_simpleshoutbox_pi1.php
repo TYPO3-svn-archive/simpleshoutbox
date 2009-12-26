@@ -29,9 +29,6 @@
  * @author Peter Schuster <typo3@peschuster.de>
  */
 
-require_once(PATH_tslib.'class.tslib_pibase.php');
-require_once(t3lib_extMgm::extPath('simpleshoutbox').'class.tx_simpleshoutbox_api.php');
-
 /**
  * Plugin 'Simple Shoutbox' for the 'simpleshoutbox' extension.
  *

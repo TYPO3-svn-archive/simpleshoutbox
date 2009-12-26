@@ -1,3 +1,9 @@
+2009-12-27  Peter Schuster   <typo3@peschuster.de>
+
+	* makes use of typo3 autoloader
+	* raised version requirements for typo3 to v4.3.0
+	* on ajax request $GLOBALS['TSFE']->id is set (e.g. for tx_smilie)
+
 2009-12-26  Peter Schuster   <typo3@peschuster.de>
 
 	* added caching of full ajax requests
