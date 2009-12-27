@@ -8,6 +8,7 @@
 	* removed 'no messages available' string from ajax response
 	* feature: added blacklist (comma separated list)
 	* feature: added auto archive function (typoscript: maxAge)
+	* released version 0.3.0
 
 2009-12-26  Peter Schuster   <typo3@peschuster.de>
 
