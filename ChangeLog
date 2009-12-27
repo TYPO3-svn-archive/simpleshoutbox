@@ -3,6 +3,7 @@
 	* makes use of typo3 autoloader
 	* raised version requirements for typo3 to v4.3.0
 	* on ajax request $GLOBALS['TSFE']->id is set (e.g. for tx_smilie)
+	* adjusted smilie hook to tx_smilie version 1.0.0
 
 2009-12-26  Peter Schuster   <typo3@peschuster.de>
 
