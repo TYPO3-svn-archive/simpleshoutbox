@@ -28,7 +28,7 @@ var txSimpleShoutbox = {
 		var d = new Date();
 
 		var req = new Ajax.Request(txSimpleShoutbox.url, {
-			method: 'post',
+			method: 'get',
 			parameters: {lastupdate: txSimpleShoutbox.lastUid, id: txSimpleShoutbox.pageId, update: 1, nocachequery: d.getTime()},
 			onSuccess: function(transport) { txSimpleShoutbox.handleResponse(transport); }
 		});

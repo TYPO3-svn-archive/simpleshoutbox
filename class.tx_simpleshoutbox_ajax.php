@@ -67,7 +67,7 @@ class tx_simpleshoutbox_ajax {
 
 		$this->piVars['message'] = t3lib_div::_GP('message');
 
-		$this->conf['pageId'] = intVal(t3lib_div::_POST('id'));
+		$this->conf['pageId'] = intVal(t3lib_div::_GP('id'));
 		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
 		if ($GLOBALS['TSFE']->id < 1) $GLOBALS['TSFE']->id = $this->conf['pageId'];
 	}
@@ -124,6 +124,7 @@ class tx_simpleshoutbox_ajax {
 			$messages = $this->api->messages(false);
 			$lastUid = $this->api->lastUid;
 			if ($lastUid < intval(t3lib_div::_GP('lastupdate'))) $lastUid = intval(t3lib_div::_GP('lastupdate'));
+			if (intval(t3lib_div::_GP('lastupdate')) == $lastUid) $messages = '';
 
 			$content = $this->xmlWrap($messages, $lastUid);
 
