@@ -6,6 +6,8 @@
 	* adjusted smilie hook to tx_smilie version 1.0.0
 	* changed type of ajax request for shoutbox update to 'get'
 	* removed 'no messages available' string from ajax response
+	* feature: added blacklist (comma separated list)
+	* feature: added auto archive function (typoscript: maxAge)
 
 2009-12-26  Peter Schuster   <typo3@peschuster.de>
 

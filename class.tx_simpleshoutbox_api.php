@@ -59,12 +59,17 @@ class tx_simpleshoutbox_api {
 		$this->piVars = $piVars;
 
 		$this->conf = array_merge((array)$this->getTS(intVal($conf['pageId'])), $conf);
-		$this->where = 'deleted=0 '.$this->conf['where'];
 
 		$this->conf['limit'] = intVal($this->conf['limit']);
 		if ($this->conf['limit'] < 1) $this->conf['limit'] = 50;
 		if (!$this->conf['dateformat']) $this->conf['dateformat'] = 'd.m. &#8211; H:i';
 		if (!$this->conf['displayColumn']) $this->conf['displayColumn'] = 'username';
+
+		$andWhere = '';
+		if (intVal($this->conf['maxAge']) > 0) {
+			$andWhere = 'AND crdate>' . (time() - intVal($this->conf['maxAge'])) . ' ';
+		}
+		$this->where = 'deleted=0 ' . $andWhere . $this->conf['where'];
 
 		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		$this->cObj->start(array());
@@ -258,6 +263,11 @@ class tx_simpleshoutbox_api {
 	function doSubmit_validate() {
 		foreach ($this->piVars as $key => $value) $this->piVars[$key] = trim($value);
 		if (!$this->piVars['message'] || $GLOBALS['TSFE']->loginUser !== true) return false;
+
+		$blacklist = t3lib_div::trimExplode(',', $this->conf['blacklist']);
+		foreach ((array)$blacklist as $word)
+			if ($word != '' && (stristr($this->piVars['message'], $word) !== false)) return false;
+
 		return true;
 	}
 

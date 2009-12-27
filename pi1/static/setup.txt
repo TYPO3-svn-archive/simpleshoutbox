@@ -5,4 +5,6 @@ plugin.tx_simpleshoutbox_pi1 {
   userProfileParam = tx_feuser_pi1[showUid]
   preventDuplicatePosts = 0
   displayColumn = username
+  maxAge = 0
+  blacklist = 
 }
