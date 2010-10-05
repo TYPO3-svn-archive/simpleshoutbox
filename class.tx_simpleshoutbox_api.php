@@ -153,8 +153,17 @@ class tx_simpleshoutbox_api {
 					// Call hook for custom markers
 					if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'])) {
 						foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraMarker'] as $userFunc) {
-							$params = array('pObj' => &$this, 'template' => $this->templateCode, 'markers' => $markers, 'row'=>&$row);
-							if (is_array($tempMarkers = t3lib_div::callUserFunction($userFunc, $params, $this))) $markers = $tempMarkers;
+							$params = array(
+								'pObj' => &$this,
+								'template' => $this->templateCode,
+								'markers' => $markers,
+								'row' => &$row
+							);
+
+							$tempMarkers = t3lib_div::callUserFunction($userFunc, $params, $this);
+							if (is_array($tempMarkers)) {
+								$markers = $tempMarkers;
+							}
 						}
 					}
 
@@ -248,7 +257,6 @@ class tx_simpleshoutbox_api {
 				$record['doublecheck'] = $double_post_check;
 
 				$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleshoutbox_messages', $record);
-				$newUid = $GLOBALS['TYPO3_DB']->sql_insert_id();
 
 				$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'ident=\'tx_simpleshoutbox_ajax\'');
 			}

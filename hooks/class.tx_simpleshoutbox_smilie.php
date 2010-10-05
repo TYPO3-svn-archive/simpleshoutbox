@@ -51,10 +51,9 @@ class tx_simpleshoutbox_smilie {
 	 * as paramter and returns result in new markers array
 	 *
 	 * @param array		$params: array of paramters
-	 * @param tx_simpleshoutbox_api		$pObj
 	 * @return array	$params['marker']
 	 */
-	function replaceSmilies(&$params, &$pObj) {
+	function replaceSmilies(&$params) {
 		if (t3lib_extMgm::isLoaded('smilie') && class_exists('tx_smilie', true)) {
 			if ($this->smilie === null) $this->smilie = t3lib_div::makeInstance('tx_smilie');
 			$params['markers']['###MESSAGETEXT###'] = $this->smilie->replaceSmilies($params['markers']['###MESSAGETEXT###']);
