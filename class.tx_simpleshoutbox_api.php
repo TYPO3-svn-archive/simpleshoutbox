@@ -37,33 +37,45 @@
  * @subpackage 	simpleshoutbox
  */
 class tx_simpleshoutbox_api {
-	var $prefixId		= 'tx_simpleshoutbox_api';		// Same as class name
-	var $scriptRelPath	= 'class.tx_simpleshoutbox_api.php';	// Path to this script relative to the extension dir.
-	var $extKey			= 'simpleshoutbox';	// The extension key.
+	protected $prefixId			= 'tx_simpleshoutbox_api';
+	protected $scriptRelPath	= 'class.tx_simpleshoutbox_api.php';
+	protected $extKey			= 'simpleshoutbox';
 
 	/**
 	 * Contains uid of latest message while last read
 	 *
 	 * @var integer
 	 */
-	var $lastUid = 0;
+	public $lastUid = 0;
 
 	/**
 	 * tslib_cObj
 	 *
 	 * @var tslib_cObj
 	 */
-	var $cObj;
+	protected $cObj;
 
+	/**
+	 * Initialize
+	 *
+	 * @param array $conf Configuration
+	 * @param array $piVars piVars
+	 */
 	function init($conf=array(), $piVars='') {
 		$this->piVars = $piVars;
 
 		$this->conf = array_merge((array)$this->getTS(intVal($conf['pageId'])), $conf);
 
 		$this->conf['limit'] = intVal($this->conf['limit']);
-		if ($this->conf['limit'] < 1) $this->conf['limit'] = 50;
-		if (!$this->conf['dateformat']) $this->conf['dateformat'] = 'd.m. &#8211; H:i';
-		if (!$this->conf['displayColumn']) $this->conf['displayColumn'] = 'username';
+		if ($this->conf['limit'] < 1) {
+			$this->conf['limit'] = 50;
+		}
+		if (!$this->conf['dateformat']) {
+			$this->conf['dateformat'] = 'd.m. &#8211; H:i';
+		}
+		if (!$this->conf['displayColumn']) {
+			$this->conf['displayColumn'] = 'username';
+		}
 
 		$andWhere = '';
 		if (intVal($this->conf['maxAge']) > 0) {
@@ -74,7 +86,9 @@ class tx_simpleshoutbox_api {
 		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		$this->cObj->start(array());
 
-		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
+		if (empty($this->conf['template'])) {
+			$this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
+		}
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
 
 		if (!$GLOBALS['LANG']) {
@@ -86,11 +100,13 @@ class tx_simpleshoutbox_api {
 	/**
 	 * Returns TypoScript configuration for plugin
 	 *
+	 * @param int  $pageId Id of page
 	 * @return array	config typoscript for tx_simpleshoutbox_pi1
 	 */
 	function getTS($pageId) {
-		if (is_array($GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.']))
+		if (is_array($GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.'])) {
 			return $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_simpleshoutbox_pi1.'];
+		}
 
 		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
 		$GLOBALS['TSFE']->tmpl = t3lib_div::makeInstance('t3lib_tstemplate');
@@ -102,13 +118,14 @@ class tx_simpleshoutbox_api {
 		$TSObj->init();
 		$TSObj->runThroughTemplates($rootLine);
 		$TSObj->generateConfig();
+
 		return $TSObj->setup['plugin.']['tx_simpleshoutbox_pi1.'];
 	}
 
 	/**
 	 * Returns list of shoutbox messages
 	 *
-	 * @param	boolean		$wrap: if true, messages are wrapped in shoutbox-container
+	 * @param	boolean $wrap if true, messages are wrapped in shoutbox-container
 	 * @return	string	list of shoutbox messages
 	 */
 	function messages($wrap=true) {
@@ -122,18 +139,19 @@ class tx_simpleshoutbox_api {
 		} else {
 			$content = $messages;
 		}
+
 		return $content;
 	}
 
 	/**
 	 * Returns list of shoutbox messages
 	 *
-	 * @param	array	$rows: database result rows (table: tx_simpleshoutbox_messages)
+	 * @param	array	$rows database result rows (table: tx_simpleshoutbox_messages)
 	 * @return	string	shoutbox messages
 	 */
 	function messages_getMessages(&$rows) {
-		if (count($rows) == 0) {
-			$content = $GLOBALS['LANG']->sL('LLL:EXT:simpleshoutbox/pi1/locallang.xml:error_nomessages',0);
+		if (count($rows) === 0) {
+			$content = $GLOBALS['LANG']->sL('LLL:EXT:simpleshoutbox/pi1/locallang.xml:error_nomessages', 0);
 		} else {
 			$content = '';
 			$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGE###');
@@ -145,7 +163,7 @@ class tx_simpleshoutbox_api {
 					$itemContent = $cache['content'];
 				} else {
 					$markers = array(
-						'###USERNAME###' => $this->messages_getUsername($row['userid'],$row['name']),
+						'###USERNAME###' => $this->messages_getUsername($row['userid'], $row['name']),
 						'###DATETIME###' => date($this->conf['dateformat'], $row['crdate']),
 						'###MESSAGETEXT###' => htmlspecialchars($row['message']),
 					);
@@ -187,24 +205,25 @@ class tx_simpleshoutbox_api {
 			}
 
 			$tempRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('crdate', 'tx_simpleshoutbox_messages', 'uid>0', '',
-						'crdate DESC', '0,'.$this->conf['limit']);
+						'crdate DESC', '0,' . $this->conf['limit']);
 			$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'ident=\'tx_simpleshoutbox\' AND tstamp<' . $tempRows[count($tempRows)-1]['crdate']);
 		}
+
 		return $content;
 	}
 
 	/**
 	 * Returns username w/o link to profile
 	 *
-	 * @param	integer	$uid: uid of user to be shown
-	 * @param	string	$name: name of user to be shown (if blank: username is read from database)
+	 * @param	integer	$uid uid of user to be shown
+	 * @param	string	$name name of user to be shown (if blank: username is read from database)
 	 * @return	username w/o link to profile
 	 */
 	function messages_getUsername($uid, $name='') {
 		$uid = intval($uid);
 
 		if (!$name) {
-			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,'.$this->conf['displayColumn'],'fe_users', 'uid='.$uid);
+			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,' . $this->conf['displayColumn'], 'fe_users', 'uid=' . $uid);
 			$name = $rows[0][$this->conf['displayColumn']];
 		}
 
@@ -212,11 +231,12 @@ class tx_simpleshoutbox_api {
 		if ($this->conf['userProfilePID']) {
 			$typoLinkConf = array(
 					'parameter' => intval($this->conf['userProfilePID']),
-					'useCacheHash' => true,
-					'additionalParams' => '&'.$this->conf['userProfileParam'].'='.$uid
+					'useCacheHash' => TRUE,
+					'additionalParams' => '&' . $this->conf['userProfileParam'] . '=' . $uid
 			);
 			$content = $this->cObj->typoLink($name, $typoLinkConf);
 		}
+
 		return $content;
 	}
 
@@ -238,8 +258,10 @@ class tx_simpleshoutbox_api {
 			// Call hook for custom data columns
 			if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraColumn'])) {
 				foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['simpleshoutbox']['extraColumn'] as $userFunc) {
-					$params = array('pObj' => &$this, 'record'=>$record);
-					if (is_array($tempRecord = t3lib_div::callUserFunction($userFunc, $params, $this))) $record = $tempRecord;
+					$params = array('pObj' => &$this, 'record' => $record);
+					if (is_array($tempRecord = t3lib_div::callUserFunction($userFunc, $params, $this))) {
+						$record = $tempRecord;
+					}
 				}
 			}
 
@@ -247,7 +269,7 @@ class tx_simpleshoutbox_api {
 			$double_post_check = md5(implode(',', $record));
 			if ($this->conf['preventDuplicatePosts']) {
 				list($info) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('COUNT(*) AS count', 'tx_simpleshoutbox_messages',
-						'deleted=0 AND crdate>=' . (time() - 60*2) . ' AND doublecheck=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($double_post_check, 'tx_simpleshoutbox_messages'));
+						'deleted=0 AND crdate>=' . (time() - 60 * 2) . ' AND doublecheck=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($double_post_check, 'tx_simpleshoutbox_messages'));
 			} else {
 				$info = array('count' => 0);
 			}
@@ -269,21 +291,29 @@ class tx_simpleshoutbox_api {
 	 * @return boolean		result of validation
 	 */
 	function doSubmit_validate() {
-		foreach ($this->piVars as $key => $value) $this->piVars[$key] = trim($value);
-		if (!$this->piVars['message'] || $GLOBALS['TSFE']->loginUser !== true) return false;
+		foreach ($this->piVars as $key => $value) {
+			$this->piVars[$key] = trim($value);
+		}
+
+		if (!$this->piVars['message'] || $GLOBALS['TSFE']->loginUser !== TRUE) {
+			return FALSE;
+		}
 
 		$blacklist = t3lib_div::trimExplode(',', $this->conf['blacklist']);
-		foreach ((array)$blacklist as $word)
-			if ($word != '' && (stristr($this->piVars['message'], $word) !== false)) return false;
+		foreach ((array)$blacklist as $word) {
+			if ($word != '' && (stristr($this->piVars['message'], $word) !== FALSE)) {
+				return FALSE;
+			}
+		}
 
-		return true;
+		return TRUE;
 	}
 
 
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_api.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_api.php']);
+if (defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_api.php'])	{
+	require_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_api.php']);
 }
 
 ?>

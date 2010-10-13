@@ -37,9 +37,9 @@
  * @subpackage 	simpleshoutbox
  */
 class tx_simpleshoutbox_ajax {
-	var $prefixId		= 'tx_simpleshoutbox_ajax';		// Same as class name
-	var $scriptRelPath	= 'class.tx_simpleshoutbox_ajax.php';	// Path to this script relative to the extension dir.
-	var $extKey			= 'simpleshoutbox';	// The extension key.
+	protected $prefixId			= 'tx_simpleshoutbox_ajax';
+	protected $scriptRelPath	= 'class.tx_simpleshoutbox_ajax.php';
+	protected $extKey			= 'simpleshoutbox';
 
 	/**
 	 * Configuration Array
@@ -68,10 +68,19 @@ class tx_simpleshoutbox_ajax {
 		$this->piVars['message'] = t3lib_div::_GP('message');
 
 		$this->conf['pageId'] = intVal(t3lib_div::_GP('id'));
-		if ($this->conf['pageId'] < 1) $this->conf['pageId'] =  1;
-		if ($GLOBALS['TSFE']->id < 1) $GLOBALS['TSFE']->id = $this->conf['pageId'];
+		if ($this->conf['pageId'] < 1) {
+			$this->conf['pageId'] =  1;
+		}
+		if ($GLOBALS['TSFE']->id < 1) {
+			$GLOBALS['TSFE']->id = $this->conf['pageId'];
+		}
 	}
 
+	/**
+	 * Initializes shoutbox api
+	 *
+	 * @return void
+	 */
 	protected function initApi() {
 		$GLOBALS['TSFE']->fe_user = tslib_eidtools::initFeUser();
 		$GLOBALS['TSFE']->loginUser = ($GLOBALS['TSFE']->fe_user->user['uid'] > 0);
@@ -83,14 +92,19 @@ class tx_simpleshoutbox_ajax {
 	/**
 	 * Wraps output into xml
 	 *
-	 * @param string	$messages: messages
-	 * @param integer	$messageId: uid of last message
-	 * @return string	XML Output
+	 * @param string  $messages messages
+	 * @param integer $messageId uid of last message
+	 * @return string XML Output
 	 */
 	protected function xmlWrap($messages, $messageId) {
+		$messages = trim($messages);
+		if (strlen($messages) > 0) {
+			$messages = '<![CDATA[' . $messages . ']]>';
+		}
+
 		$content = '<?xml version="1.0" ?><simpleshoutbox>';
 		$content .= '<lastuid>' . $messageId . '</lastuid>';
-		$content .= '<messages>' . ($messages ? '<![CDATA[' . $messages . ']]>' : '') . '</messages>';
+		$content .= '<messages>' . $messages . '</messages>';
 		$content .= '</simpleshoutbox>';
 		return $content;
 	}
@@ -119,12 +133,18 @@ class tx_simpleshoutbox_ajax {
 			$content = $cache['content'];
 
 		} else {
-			if ($this->api === NULL) $this->initApi();
+			if ($this->api === NULL) {
+				$this->initApi();
+			}
 
-			$messages = $this->api->messages(false);
+			$messages = $this->api->messages(FALSE);
 			$lastUid = $this->api->lastUid;
-			if ($lastUid < intval(t3lib_div::_GP('lastupdate'))) $lastUid = intval(t3lib_div::_GP('lastupdate'));
-			if (intval(t3lib_div::_GP('lastupdate')) == $lastUid) $messages = '';
+			if ($lastUid < intval(t3lib_div::_GP('lastupdate'))) {
+				$lastUid = intval(t3lib_div::_GP('lastupdate'));
+			}
+			if (intval(t3lib_div::_GP('lastupdate')) == $lastUid) {
+				$messages = '';
+			}
 
 			$content = $this->xmlWrap($messages, $lastUid);
 
@@ -145,11 +165,11 @@ class tx_simpleshoutbox_ajax {
 
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_ajax.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_ajax.php']);
+if (defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_ajax.php'])	{
+	require_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/class.tx_simpleshoutbox_ajax.php']);
 }
 
-$SOBE = t3lib_div::makeInstance('tx_simpleshoutbox_ajax');
-echo $SOBE->main();
+$obj = t3lib_div::makeInstance('tx_simpleshoutbox_ajax');
+echo $obj->main();
 
 ?>

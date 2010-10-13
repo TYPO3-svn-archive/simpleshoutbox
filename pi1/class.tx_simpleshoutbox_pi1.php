@@ -37,28 +37,32 @@
  * @subpackage	tx_simpleshoutbox
  */
 class tx_simpleshoutbox_pi1 extends tslib_pibase {
-	var $prefixId      = 'tx_simpleshoutbox_pi1';		// Same as class name
-	var $scriptRelPath = 'pi1/class.tx_simpleshoutbox_pi1.php';	// Path to this script relative to the extension dir.
-	var $extKey        = 'simpleshoutbox';	// The extension key.
+	public $prefixId      = 'tx_simpleshoutbox_pi1';
+	public $scriptRelPath = 'pi1/class.tx_simpleshoutbox_pi1.php';
+	public $extKey        = 'simpleshoutbox';
 
 	/**
 	 * Initiates configuration variables
 	 *
-	 * @param	array	$conf: Configuration Array
+	 * @param array $conf Configuration Array
 	 */
-	function init($conf) {
-		$this->conf=$conf;
+	protected function init($conf) {
+		$this->conf = $conf;
 		$this->pi_setPiVarDefaults();
 		$this->pi_loadLL();
 
-		if (empty($this->conf['template'])) $this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
+		if (empty($this->conf['template'])) {
+			$this->conf['template'] = 'EXT:simpleshoutbox/res/template.html';
+		}
 		$this->templateCode = $this->cObj->fileResource($this->conf['template']);
 		$this->templateCode = $this->cObj->substituteMarker($this->templateCode, '###SITE_REL_PATH###', t3lib_extMgm::siteRelPath($this->extKey));
 
 		$key = 'tx_simpleshoutbox_' . md5($this->templateCode);
 		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
 			$headerParts = $this->cObj->getSubpart($this->templateCode, '###HEADER_ADDITIONS###');
-			if ($headerParts) $GLOBALS['TSFE']->additionalHeaderData[$key] = $headerParts;
+			if ($headerParts) {
+				$GLOBALS['TSFE']->additionalHeaderData[$key] = $headerParts;
+			}
 		}
 
 		$GLOBALS['TSFE']->additionalHeaderData['prototype_js'] = '	<script src="typo3/contrib/prototype/prototype.js" type="text/javascript"></script>';
@@ -72,11 +76,11 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	/**
 	 * The main method of the PlugIn
 	 *
-	 * @param	string		$content: The PlugIn content
-	 * @param	array		$conf: The PlugIn configuration
+	 * @param	string $content The PlugIn content
+	 * @param	array  $conf The PlugIn configuration
 	 * @return	The content that is displayed on the website
 	 */
-	function main($content,$conf)	{
+	public function main($content, $conf)	{
 		$this->init($conf);
 
 		if ($this->piVars['submit']) {
@@ -93,7 +97,7 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 *
 	 * @return	string	message form
 	 */
-	function form() {
+	protected function form() {
 		$template = $this->cObj->getSubpart($this->templateCode, '###FORM###');
 
 		$markers = array(
@@ -112,10 +116,10 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 	 *
 	 * @return	string	content to be presented on website
 	 */
-	function generateOutput() {
+	protected function generateOutput() {
 		$content = $this->api->messages();
 		if ($GLOBALS['TSFE']->loginUser) {
-			$content .= "\n".$this->form();
+			$content .= "\n" . $this->form();
 		} else {
 			$content .= $this->pi_getLL('error_login');
 		}
@@ -126,8 +130,8 @@ class tx_simpleshoutbox_pi1 extends tslib_pibase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/pi1/class.tx_simpleshoutbox_pi1.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/pi1/class.tx_simpleshoutbox_pi1.php']);
+if (defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/pi1/class.tx_simpleshoutbox_pi1.php'])	{
+	require_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/pi1/class.tx_simpleshoutbox_pi1.php']);
 }
 
 ?>

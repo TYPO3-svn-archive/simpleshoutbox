@@ -44,18 +44,21 @@ class tx_simpleshoutbox_smilie {
 	 *
 	 * @var tx_smilie
 	 */
-	public $smilie = null;
+	public $smilie = NULL;
 
 	/**
-	 * Calls tx_smilie->replaceSmilies with $params['markers']['###MESSAGETEXT###']
-	 * as paramter and returns result in new markers array
+	 * Calls tx_smilie->replaceSmilies with
+	 * $params['markers']['###MESSAGETEXT###'] as paramter
+	 * and returns result in new markers array
 	 *
-	 * @param array		$params: array of paramters
-	 * @return array	$params['marker']
+	 * @param array $params array of paramters
+	 * @return array $params['marker']
 	 */
-	function replaceSmilies(&$params) {
-		if (t3lib_extMgm::isLoaded('smilie') && class_exists('tx_smilie', true)) {
-			if ($this->smilie === null) $this->smilie = t3lib_div::makeInstance('tx_smilie');
+	public function replaceSmilies(&$params) {
+		if (t3lib_extMgm::isLoaded('smilie') && class_exists('tx_smilie', TRUE)) {
+			if ($this->smilie === NULL) {
+				$this->smilie = t3lib_div::makeInstance('tx_smilie');
+			}
 			$params['markers']['###MESSAGETEXT###'] = $this->smilie->replaceSmilies($params['markers']['###MESSAGETEXT###']);
 			return $params['markers'];
 		}
@@ -64,7 +67,7 @@ class tx_simpleshoutbox_smilie {
 
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/hooks/class.tx_simpleshoutbox_smilie.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/hooks/class.tx_simpleshoutbox_smilie.php']);
+if (defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/hooks/class.tx_simpleshoutbox_smilie.php'])	{
+	require_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simpleshoutbox/hooks/class.tx_simpleshoutbox_smilie.php']);
 }
 ?>
